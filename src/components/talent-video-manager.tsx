@@ -5,13 +5,14 @@ import {
   uploadTalentVideo,
   updateVideoClip,
   updateVideoTitle,
+  updateVideoAudio,
   deleteVideo,
   talentVideoFileUrl,
   type Talent,
   type TalentVideo,
 } from "@/lib/api";
 import { parseDuration, formatDuration } from "@/lib/duration";
-import { X, Trash2, Upload, Film, Check, Scissors, Play, Pencil } from "lucide-react";
+import { X, Trash2, Upload, Film, Check, Scissors, Play, Pencil, Volume2, VolumeX } from "lucide-react";
 
 function formatLength(sec?: number | null): string | null {
   if (typeof sec !== "number" || sec <= 0) return null;
@@ -95,6 +96,19 @@ export function TalentVideoManager({
       applyUpdated(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menghapus");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleToggleAudio(video: TalentVideo) {
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await updateVideoAudio(talent.id, video.index, !video.with_audio);
+      applyUpdated(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal mengubah audio");
     } finally {
       setBusy(false);
     }
@@ -247,6 +261,18 @@ export function TalentVideoManager({
                       title="Preview video"
                     >
                       <Play className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleAudio(v)}
+                      disabled={busy}
+                      className={`p-1.5 rounded-md transition-colors disabled:opacity-50 ${
+                        v.with_audio
+                          ? "bg-success/20 text-success"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      }`}
+                      title={v.with_audio ? "Audio ON — klik untuk mute" : "Audio OFF — klik untuk unmute"}
+                    >
+                      {v.with_audio ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={() => {

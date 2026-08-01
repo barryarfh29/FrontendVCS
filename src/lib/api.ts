@@ -131,6 +131,7 @@ export interface TalentVideo {
   title?: string;
   length_seconds?: number | null;
   clip_seconds: number | null;
+  with_audio?: boolean;
 }
 
 export interface TalentPackage {
@@ -281,6 +282,17 @@ export async function updateVideoTitle(
   return fetchAPI(`/api/talents/${id}/videos/${index}`, {
     method: "PUT",
     body: JSON.stringify({ title }),
+  });
+}
+
+export async function updateVideoAudio(
+  id: string,
+  index: number,
+  withAudio: boolean
+): Promise<Talent> {
+  return fetchAPI(`/api/talents/${id}/videos/${index}`, {
+    method: "PUT",
+    body: JSON.stringify({ with_audio: withAudio }),
   });
 }
 
