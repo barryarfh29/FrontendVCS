@@ -18,6 +18,7 @@ import {
   UserPlus,
   Trash2,
   Bot,
+  MessageSquare,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -43,6 +44,12 @@ export default function SettingsPage() {
   } | null>(null);
   const [showUserbotLogin, setShowUserbotLogin] = useState(false);
 
+  // Log Channels
+  const [logChannelStart, setLogChannelStart] = useState("");
+  const [logChannelPayment, setLogChannelPayment] = useState("");
+  const [logSaving, setLogSaving] = useState(false);
+  const [logMessage, setLogMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
   async function loadAll() {
     try {
       const data = await getSettings();
@@ -51,6 +58,8 @@ export default function SettingsPage() {
       if (data.price) setPrice(String(data.price));
       if (data.duration) setDuration(String(data.duration));
       setAdminIds((data.admin_ids as number[]) || []);
+      setLogChannelStart(String(data.log_channel_start || ""));
+      setLogChannelPayment(String(data.log_channel_payment || ""));
     } catch (err) {
       console.error("Failed to load settings:", err);
     } finally {
@@ -100,6 +109,38 @@ export default function SettingsPage() {
       });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveLogChannels() {
+    setLogSaving(true);
+    setLogMessage(null);
+    try {
+      const payload: Record<string, number> = {};
+      payload.log_channel_start = logChannelStart.trim() ? parseInt(logChannelStart, 10) : 0;
+      payload.log_channel_payment = logChannelPayment.trim() ? parseInt(logChannelPayment, 10) : 0;
+
+      if (logChannelStart.trim() && isNaN(payload.log_channel_start)) {
+        setLogMessage({ type: "err", text: "Log Channel Start harus angka" });
+        setLogSaving(false);
+        return;
+      }
+      if (logChannelPayment.trim() && isNaN(payload.log_channel_payment)) {
+        setLogMessage({ type: "err", text: "Log Channel Payment harus angka" });
+        setLogSaving(false);
+        return;
+      }
+
+      await updateSettings(payload);
+      setLogMessage({ type: "ok", text: "✓ Log channels berhasil disimpan!" });
+      setTimeout(() => setLogMessage(null), 3000);
+    } catch (err) {
+      setLogMessage({
+        type: "err",
+        text: err instanceof Error ? err.message : "Gagal menyimpan",
+      });
+    } finally {
+      setLogSaving(false);
     }
   }
 
@@ -246,6 +287,69 @@ export default function SettingsPage() {
             {userbotStatus?.ready ? "Re-login Userbot" : "Login Userbot"}
           </button>
         </div>
+      </div>
+
+      {/* Log Channels */}
+      <div className="ui-card p-6">
+        <h2 className="text-lg font-semibold mb-1 flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+            <MessageSquare className="h-4 w-4 text-white" />
+          </span>
+          Log Channels
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Channel Telegram untuk menerima log otomatis. Isi 0 atau kosongkan untuk disable.
+          Bot harus sudah jadi admin di channel.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground">
+              Log Channel Start
+            </label>
+            <input
+              type="text"
+              value={logChannelStart}
+              onChange={(e) => setLogChannelStart(e.target.value)}
+              placeholder="-1001234567890"
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary font-mono"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Channel ID untuk log setiap user /start bot
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">
+              Log Channel Payment
+            </label>
+            <input
+              type="text"
+              value={logChannelPayment}
+              onChange={(e) => setLogChannelPayment(e.target.value)}
+              placeholder="-1009876543210"
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary font-mono"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Channel ID untuk log pembayaran berhasil
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleSaveLogChannels}
+          disabled={logSaving}
+          className="mt-4 flex items-center gap-1.5 px-4 py-2 text-xs rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
+        >
+          <Save className="h-3 w-3" />
+          {logSaving ? "Saving..." : "Save Log Channels"}
+        </button>
+        {logMessage && (
+          <p
+            className={`mt-3 text-sm ${
+              logMessage.type === "ok" ? "text-success" : "text-destructive"
+            }`}
+          >
+            {logMessage.text}
+          </p>
+        )}
       </div>
 
       {/* Admins */}
