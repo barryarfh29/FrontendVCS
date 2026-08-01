@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0e17;
+  --foreground: #eef1f8;
+  --card: #11151f;
+  --card-foreground: #eef1f8;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --secondary: #1a2030;
+  --secondary-foreground: #aab3c5;
+  --muted: #151a26;
+  --muted-foreground: #7c86a0;
+  --accent: #6d28d9;
+  --accent-foreground: #ffffff;
+  --border: #222a3d;
+  --input: #161b28;
+  --ring: #8b5cf6;
+  --destructive: #f43f5e;
+  --success: #10d9a3;
+  --warning: #f59e0b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Scrollbar tipis untuk tema gelap */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3247;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38415c;
+}
+
+/* Kartu dengan gradient tipis + hover lift */
+.ui-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 45%),
+    var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.ui-card-hover:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(139, 92, 246, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Teks gradient untuk judul halaman */
+.gradient-text {
+  background: linear-gradient(90deg, #eef1f8 30%, #c4b5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animasi masuk halus */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.35s ease both;
+}
+
+/* Spinner loading */
+.ui-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* TipTap Editor Styles */
+.tiptap {
+  outline: none;
+  min-height: 200px;
+  padding: 1rem;
+}
+
+.tiptap h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.tiptap h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tiptap h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tiptap p {
+  margin-bottom: 0.5rem;
+}
+
+.tiptap strong {
+  font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap hr {
+  border-color: var(--border);
+  margin: 1rem 0;
+}
+
+.tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.tiptap table td,
+.tiptap table th {
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  min-width: 100px;
+}
+
+.tiptap table th {
+  background: var(--secondary);
+  font-weight: 600;
+}
+
+/* Telegram Preview Styles */
+.telegram-preview h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.telegram-preview h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.telegram-preview h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.telegram-preview p {
+  margin-bottom: 0.25rem;
+}
+
+.telegram-preview strong {
+  font-weight: 700;
+}
+
+.telegram-preview hr {
+  border-color: #3a4a5a;
+  margin: 0.5rem 0;
+}
+
+.telegram-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.telegram-preview table td,
+.telegram-preview table th {
+  border: 1px solid #3a4a5a;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Rich blocks (Bot API 10.1) â€” editor & preview styling */
+.tiptap blockquote,
+.telegram-preview blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
+.tiptap aside,
+.telegram-preview aside {
+  text-align: center;
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0;
+  margin: 0.5rem 0;
+}
+.tiptap footer,
+.telegram-preview footer {
+  font-size: 0.8em;
+  opacity: 0.7;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+.tiptap details,
+.telegram-preview details {
+  border: 1px dashed var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.tiptap details summary,
+.telegram-preview details summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.tiptap tg-math-block,
+.telegram-preview tg-math-block {
+  display: block;
+  font-family: monospace;
+  background: rgba(127, 127, 127, 0.15);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.tiptap pre,
+.telegram-preview pre {
+  background: rgba(127, 127, 127, 0.15);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+  font-family: monospace;
+  font-size: 0.85em;
+  overflow-x: auto;
+}
