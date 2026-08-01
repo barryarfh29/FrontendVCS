@@ -132,6 +132,7 @@ export interface TalentVideo {
   length_seconds?: number | null;
   clip_seconds: number | null;
   with_audio?: boolean;
+  active?: boolean;
 }
 
 export interface TalentPackage {
