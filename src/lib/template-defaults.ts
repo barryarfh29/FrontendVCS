@@ -7,6 +7,9 @@ export const TEMPLATE_DEFAULTS: Record<string, string> = {
   session_end: `<h4>SESSION ENDED</h4><p>Thank you for using our service!</p><p>Send /start whenever you want a new session.</p>`,
   talent_full: `<h4>{talent_name} IS BUSY</h4><p>Currently serving another customer.</p><p>Tap <b>Enable Notifications</b> to get notified when this talent is available again.</p>`,
   talent_detail: `<h4>{talent_name}</h4><p>{desc}</p><table><tbody><tr><td><p><strong>Price</strong></p></td><td><p><strong>{price}</strong></p></td></tr><tr><td><p><strong>Duration</strong></p></td><td><p>{duration} minutes</p></td></tr></tbody></table><p>Tap <b>Order</b> to continue.</p>`,
+  loading_1: `<p>⏳ Loading...</p>`,
+  loading_2: `<p>✅ Found <b>{count}</b> talents available</p>`,
+  loading_3: `<p>🎯 Preparing menu... ({count} talents)</p>`,
 };
 
 // Preset siap pakai — klik untuk memuat contoh ke editor.
@@ -184,5 +187,20 @@ export const TEMPLATE_META: Record<
     label: "Talent Detail",
     description: "Detail talent ({desc} diisi dari admin bot)",
     variables: ["{talent_name}", "{desc}", "{price}", "{duration}"],
+  },
+  loading_1: {
+    label: "Loading Step 1",
+    description: "Pesan awal saat user /start",
+    variables: [],
+  },
+  loading_2: {
+    label: "Loading Step 2",
+    description: "Setelah cek talent tersedia",
+    variables: ["{count}"],
+  },
+  loading_3: {
+    label: "Loading Step 3",
+    description: "Sebelum menu muncul",
+    variables: ["{count}"],
   },
 };
