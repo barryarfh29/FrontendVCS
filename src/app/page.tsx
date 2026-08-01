@@ -42,7 +42,9 @@ export default function DashboardPage() {
   const todayTxs = transactions.filter((tx) =>
     new Date((tx.created_at || 0) * 1000).toISOString().startsWith(today)
   );
-  const totalToday = todayTxs.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+  const totalToday = todayTxs
+    .filter((tx) => tx.status?.toUpperCase() === "PAID")
+    .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   const onlineTalents = talents.filter((t) => t.status === "online");
 
   if (loading) {
