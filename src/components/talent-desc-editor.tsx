@@ -140,7 +140,9 @@ export function TalentDescEditor({
         <div className="flex-1 overflow-y-auto">
           {viewMode === "editor" && editor && (
             <div>
-              <EditorToolbar editor={editor} />
+              <div className="sticky top-0 z-10 bg-card">
+                <EditorToolbar editor={editor} />
+              </div>
               <EditorContent editor={editor} />
             </div>
           )}
