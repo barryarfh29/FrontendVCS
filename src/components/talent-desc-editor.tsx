@@ -72,15 +72,15 @@ export function TalentDescEditor({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-          <div>
-            <h2 className="text-lg font-semibold">Deskripsi — {talent.name}</h2>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold truncate">Deskripsi — {talent.name}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               Tampil di detail talent (variabel {"{desc}"} pada template
               Talent Detail). Mendukung heading, list, dan tabel.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="flex bg-secondary rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("editor")}
@@ -139,7 +139,7 @@ export function TalentDescEditor({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {viewMode === "editor" && editor && (
             <div>
               <div className="sticky top-0 z-10 bg-card">

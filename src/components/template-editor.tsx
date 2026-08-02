@@ -97,7 +97,7 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
   return (
     <div className="h-full flex flex-col bg-card rounded-xl border border-border overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
         <div>
           <h2 className="text-lg font-semibold">
             {meta?.label || template.key}
@@ -163,7 +163,7 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
 
       {/* Preset Examples */}
       {presets.length > 0 && (
-        <div className="flex items-center gap-2 px-5 py-2 border-b border-border flex-wrap bg-secondary/30">
+        <div className="flex items-center gap-2 px-5 py-2 border-b border-border flex-wrap bg-secondary/30 shrink-0">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Sparkles className="h-3 w-3" />
             Contoh template:
@@ -203,7 +203,7 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
       )}
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {viewMode === "editor" && editor && (
           <div>
             <div className="sticky top-0 z-10 bg-card">
