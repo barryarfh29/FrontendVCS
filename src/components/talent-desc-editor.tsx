@@ -48,7 +48,7 @@ export function TalentDescEditor({
     },
     editorProps: {
       attributes: {
-        class: "tiptap focus:outline-none min-h-[200px]",
+        class: "tiptap focus:outline-none min-h-[200px] px-5 py-4",
       },
     },
   });
@@ -69,22 +69,18 @@ export function TalentDescEditor({
   }, [editor, htmlSource, viewMode, talent.id, onSaved, onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold truncate">Deskripsi — {talent.name}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Tampil di detail talent (variabel {"{desc}"} pada template
-              Talent Detail). Mendukung heading, list, dan tabel.
-            </p>
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/60 p-0 lg:p-4 lg:items-center lg:justify-center">
+      <div className="relative bg-card w-full h-full lg:rounded-xl lg:border lg:border-border lg:w-full lg:max-w-2xl lg:max-h-[85vh] flex flex-col overflow-hidden">
+        {/* Fixed Header */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0 bg-card z-20">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold truncate">Deskripsi — {talent.name}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex bg-secondary rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("editor")}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                   viewMode === "editor"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -94,7 +90,7 @@ export function TalentDescEditor({
               </button>
               <button
                 onClick={() => setViewMode("html")}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                   viewMode === "html"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -104,7 +100,7 @@ export function TalentDescEditor({
               </button>
               <button
                 onClick={() => setViewMode("preview")}
-                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                   viewMode === "preview"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -113,14 +109,6 @@ export function TalentDescEditor({
                 <Eye className="h-3 w-3" />
               </button>
             </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <Save className="h-3 w-3" />
-              {saving ? "Saving..." : "Save"}
-            </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -133,16 +121,16 @@ export function TalentDescEditor({
 
         {/* Error */}
         {error && (
-          <div className="px-5 py-2 text-sm bg-destructive/10 text-destructive flex items-center gap-2">
+          <div className="px-5 py-2 text-sm bg-destructive/10 text-destructive flex items-center gap-2 shrink-0">
             <AlertCircle className="h-4 w-4" /> {error}
           </div>
         )}
 
-        {/* Content */}
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {viewMode === "editor" && editor && (
             <div>
-              <div className="sticky top-0 z-10 bg-card">
+              <div className="sticky top-0 z-10 bg-card border-b border-border">
                 <EditorToolbar editor={editor} />
               </div>
               <EditorContent editor={editor} />
@@ -177,6 +165,21 @@ export function TalentDescEditor({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Fixed Save Footer */}
+        <div className="shrink-0 border-t border-border px-4 py-3 bg-card flex items-center justify-end gap-2">
+          <p className="text-xs text-muted-foreground flex-1">
+            ESC untuk tutup · Ctrl+S untuk simpan
+          </p>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-5 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save"}
+          </button>
         </div>
       </div>
     </div>
