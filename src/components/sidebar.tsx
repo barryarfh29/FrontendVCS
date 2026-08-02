@@ -15,6 +15,7 @@ import {
   X,
   CreditCard,
   LogOut,
+  Tag,
 } from "lucide-react";
 import { logout } from "@/lib/api";
 
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/templates", label: "Templates", icon: FileText },
   { href: "/talents", label: "Talents", icon: Users },
   { href: "/transactions", label: "Transactions", icon: CreditCard },
+  { href: "/promos", label: "Promo Codes", icon: Tag },
   { href: "/activities", label: "Activity Log", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

@@ -414,6 +414,41 @@ export async function getTransactions(): Promise<Transaction[]> {
   return fetchAPI("/api/transactions");
 }
 
+// Promos
+export interface Promo {
+  code: string;
+  discount_type: "percent" | "fixed";
+  discount_value: number;
+  max_uses: number;
+  used_count: number;
+  talent_ids: string[];
+  created_by: string;
+  active: boolean;
+  created_at: string | number;
+}
+
+export async function getPromos(): Promise<Promo[]> {
+  return fetchAPI("/api/promos");
+}
+
+export async function createPromo(data: {
+  code: string;
+  discount_type: "percent" | "fixed";
+  discount_value: number;
+  max_uses: number;
+  talent_ids?: string[];
+  created_by?: string;
+}): Promise<Promo> {
+  return fetchAPI("/api/promos", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deletePromo(code: string): Promise<{ ok: boolean }> {
+  return fetchAPI(`/api/promos/${encodeURIComponent(code)}`, { method: "DELETE" });
+}
+
 // Activities (auto backup semua kegiatan bot)
 export async function getActivities(
   limit = 50,
