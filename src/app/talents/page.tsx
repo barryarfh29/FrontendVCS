@@ -820,10 +820,10 @@ function PackageEditor({
                       <input
                         type="number"
                         min="0"
-                        step="any"
+                        step="0.01"
                         value={row.duration || ""}
                         onChange={(e) => update(i, "duration", e.target.value)}
-                        placeholder="Menit (desimal)"
+                        placeholder="5.6 = 5m 36s"
                         className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
                       />
                       {row.duration > 0 && (
