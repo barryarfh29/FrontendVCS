@@ -53,3 +53,56 @@ export function formatDuration(minutes: number): string {
   const s = totalSec % 60;
   return s === 0 ? `${m} menit` : `${m} menit ${s} detik`;
 }
+
+/**
+ * Parse input harga menjadi angka (Rupiah). Return angka > 0 atau null.
+ * Format yang diterima:
+ *   - "300000" / "300.000" / "300,000" -> 300000
+ *   - "300rb" / "300 rb"              -> 300000
+ *   - "1.5jt" / "1,5jt" / "1.5 jt"   -> 1500000
+ *   - "275k"                           -> 275000
+ */
+export function parsePrice(text: string): number | null {
+  let s = String(text).trim().toLowerCase();
+  if (!s) return null;
+
+  // Format "1.5jt" / "1,5jt"
+  const jtMatch = s.match(/^([\d.,]+)\s*jt$/);
+  if (jtMatch) {
+    const val = parseFloat(jtMatch[1].replace(",", "."));
+    if (isNaN(val) || val <= 0) return null;
+    return Math.round(val * 1000000);
+  }
+
+  // Format "300rb" / "300 rb"
+  const rbMatch = s.match(/^([\d.,]+)\s*rb$/);
+  if (rbMatch) {
+    const val = parseFloat(rbMatch[1].replace(",", "."));
+    if (isNaN(val) || val <= 0) return null;
+    return Math.round(val * 1000);
+  }
+
+  // Format "275k"
+  const kMatch = s.match(/^([\d.,]+)\s*k$/);
+  if (kMatch) {
+    const val = parseFloat(kMatch[1].replace(",", "."));
+    if (isNaN(val) || val <= 0) return null;
+    return Math.round(val * 1000);
+  }
+
+  // Format angka biasa: "300000" / "300.000" / "300,000"
+  // Hapus separator ribuan (titik atau koma yang diikuti 3 digit)
+  const cleaned = s.replace(/[.,](\d{3})/g, "$1");
+  const val = parseInt(cleaned, 10);
+  if (isNaN(val) || val <= 0) return null;
+  return val;
+}
+
+/** Format angka ke tampilan Rupiah ringkas. */
+export function formatPrice(amount: number): string {
+  if (amount >= 1000000) {
+    const jt = amount / 1000000;
+    return jt % 1 === 0 ? `${jt}jt` : `${jt.toFixed(1).replace(".0", "")}jt`;
+  }
+  return `Rp ${amount.toLocaleString("id-ID")}`;
+}

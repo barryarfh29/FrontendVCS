@@ -16,7 +16,7 @@ import {
 import { TalentDescEditor } from "@/components/talent-desc-editor";
 import { TalentVideoManager } from "@/components/talent-video-manager";
 import { TalentLogin } from "@/components/talent-login";
-import { parseDuration, formatDuration } from "@/lib/duration";
+import { parseDuration, formatDuration, parsePrice, formatPrice } from "@/lib/duration";
 import {
   Users,
   Wifi,
@@ -712,7 +712,7 @@ function PackageEditor({
           ? {
               ...row,
               [field]:
-                field === "label" || field === "duration"
+                field === "label" || field === "duration" || field === "price"
                   ? value
                   : field === "video_index"
                   ? value === ""
@@ -732,8 +732,9 @@ function PackageEditor({
       const dur = parseDuration(String(p.duration || ""));
       if (dur === null)
         return setError("Durasi tiap paket harus valid. Format: 5m3s, 5:03, 303s, atau 5.05 (menit desimal).");
-      if (!p.price || p.price <= 0)
-        return setError("Harga tiap paket harus lebih dari 0.");
+      const priceVal = parsePrice(String(p.price || ""));
+      if (priceVal === null)
+        return setError("Harga tiap paket harus valid. Format: 300rb, 300.000, 1.5jt, atau 300000.");
     }
     setSaving(true);
     setError(null);
@@ -741,7 +742,7 @@ function PackageEditor({
       const updated = await updateTalent(talent.id, {
         packages: rows.map((p) => ({
           duration: parseDuration(String(p.duration || ""))!,
-          price: Number(p.price),
+          price: parsePrice(String(p.price || ""))!,
           label: (p.label || "").trim(),
           video_index:
             p.video_index === null || p.video_index === undefined
@@ -832,14 +833,20 @@ function PackageEditor({
                         </p>
                       )}
                     </div>
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.price || ""}
-                      onChange={(e) => update(i, "price", e.target.value)}
-                      placeholder="Harga (Rp)"
-                      className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        value={row.price || ""}
+                        onChange={(e) => update(i, "price", e.target.value)}
+                        placeholder="300rb / 300.000"
+                        className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
+                      />
+                      {row.price && parsePrice(String(row.price)) !== null && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          = Rp {parsePrice(String(row.price))!.toLocaleString("id-ID")}
+                        </p>
+                      )}
+                    </div>
                     <input
                       value={row.label || ""}
                       onChange={(e) => update(i, "label", e.target.value)}
