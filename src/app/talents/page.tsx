@@ -816,15 +816,22 @@ function PackageEditor({
                     </button>
                   </div>
                   <div className="grid grid-cols-[1fr_1fr_1.4fr] gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={row.duration || ""}
-                      onChange={(e) => update(i, "duration", e.target.value)}
-                      placeholder="Durasi (menit)"
-                      className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
-                    />
+                    <div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={row.duration || ""}
+                        onChange={(e) => update(i, "duration", e.target.value)}
+                        placeholder="Menit (desimal)"
+                        className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
+                      />
+                      {row.duration > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          = {formatDuration(Number(row.duration))}
+                        </p>
+                      )}
+                    </div>
                     <input
                       type="number"
                       min="0"
