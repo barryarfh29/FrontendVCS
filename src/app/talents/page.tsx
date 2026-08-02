@@ -761,8 +761,8 @@ function PackageEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="ui-card w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl shadow-black/50 animate-fade-up">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
+      <div className="ui-card w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl shadow-black/50 animate-fade-up">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border shrink-0">
           <div>
             <h2 className="text-lg font-semibold">Paket Durasi — {talent.name}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -780,12 +780,13 @@ function PackageEditor({
         </div>
 
         {error && (
-          <div className="px-5 py-2 text-sm bg-destructive/10 text-destructive">
+          <div className="px-5 py-2 text-sm bg-destructive/10 text-destructive shrink-0">
             {error}
           </div>
         )}
 
-        <div className="p-5 space-y-3">
+        {/* Scrollable package list */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {rows.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Belum ada paket. Tambahkan paket pertama di bawah.
@@ -858,7 +859,10 @@ function PackageEditor({
               ))}
             </div>
           )}
+        </div>
 
+        {/* Sticky footer buttons */}
+        <div className="shrink-0 border-t border-border p-5 space-y-3">
           <button
             onClick={addRow}
             className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs rounded-lg border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
@@ -870,7 +874,7 @@ function PackageEditor({
           <button
             onClick={save}
             disabled={saving}
-            className="w-full mt-1 px-4 py-2.5 text-sm rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
+            className="w-full px-4 py-2.5 text-sm rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
           >
             {saving ? "Menyimpan..." : "Simpan Paket"}
           </button>
