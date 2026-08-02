@@ -50,6 +50,9 @@ export default function SettingsPage() {
   const [logSaving, setLogSaving] = useState(false);
   const [logMessage, setLogMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  // CS Username
+  const [csUsername, setCsUsername] = useState("");
+
   async function loadAll() {
     try {
       const data = await getSettings();
@@ -60,6 +63,7 @@ export default function SettingsPage() {
       setAdminIds((data.admin_ids as number[]) || []);
       setLogChannelStart(String(data.log_channel_start || ""));
       setLogChannelPayment(String(data.log_channel_payment || ""));
+      setCsUsername(String(data.cs_username || ""));
     } catch (err) {
       console.error("Failed to load settings:", err);
     } finally {
@@ -98,6 +102,7 @@ export default function SettingsPage() {
         myr_rate: rate,
         price: priceNum,
         duration: mins,
+        cs_username: csUsername.trim().replace(/^@/, ""),
       });
       setSettings(updated);
       setMessage({ type: "ok", text: "✓ Settings berhasil disimpan!" });
@@ -235,6 +240,20 @@ export default function SettingsPage() {
               className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary"
             />
           </div>
+        </div>
+        <div className="mt-4">
+          <label className="text-xs text-muted-foreground">
+            CS Username (tanpa @)
+          </label>
+          <input
+            value={csUsername}
+            onChange={(e) => setCsUsername(e.target.value)}
+            placeholder="contoh: cs_vcsroom"
+            className="mt-1 w-full max-w-xs px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary font-mono"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Username Telegram untuk tombol Customer Service di bot. Kosong = tidak tampil.
+          </p>
         </div>
         <button
           onClick={handleSave}
