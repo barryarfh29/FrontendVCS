@@ -4,18 +4,20 @@ import { useEffect, useState } from "react";
 import {
   getPromos,
   createPromo,
+  updatePromo,
   deletePromo,
   getTalents,
   type Promo,
   type Talent,
 } from "@/lib/api";
-import { Tag, Plus, Trash2, X, Users, ChevronDown } from "lucide-react";
+import { Tag, Plus, Trash2, X, Users, ChevronDown, Pencil, Power } from "lucide-react";
 
 export default function PromosPage() {
   const [promos, setPromos] = useState<Promo[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [editingPromo, setEditingPromo] = useState<Promo | null>(null);
   const [busyCode, setBusyCode] = useState<string | null>(null);
 
   async function load() {
@@ -60,6 +62,18 @@ export default function PromosPage() {
         </span>
       </span>
     );
+  }
+
+  async function handleToggleActive(promo: Promo) {
+    setBusyCode(promo.code);
+    try {
+      const updated = await updatePromo(promo.code, { active: !promo.active });
+      setPromos((prev) => prev.map((p) => (p.code === promo.code ? updated : p)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengubah status");
+    } finally {
+      setBusyCode(null);
+    }
   }
 
   async function handleDelete(code: string) {
@@ -166,25 +180,37 @@ export default function PromosPage() {
                       <td className="px-4 py-3">{promo.used_count}</td>
                       <td className="px-4 py-3 text-muted-foreground">{promo.created_by || "-"}</td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        <button
+                          onClick={() => handleToggleActive(promo)}
+                          disabled={busyCode === promo.code}
+                          title="Toggle active/inactive"
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-colors disabled:opacity-50 ${
                             status.active
-                              ? "bg-success/15 text-success ring-1 ring-success/30"
-                              : "bg-destructive/15 text-destructive ring-1 ring-destructive/30"
+                              ? "bg-success/15 text-success ring-1 ring-success/30 hover:bg-destructive/20 hover:text-destructive hover:ring-destructive/30"
+                              : "bg-destructive/15 text-destructive ring-1 ring-destructive/30 hover:bg-success/20 hover:text-success hover:ring-success/30"
                           }`}
                         >
+                          <Power className="h-3 w-3" />
                           {status.label}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleDelete(promo.code)}
-                          disabled={busyCode === promo.code}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Delete
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setEditingPromo(promo)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(promo.code)}
+                            disabled={busyCode === promo.code}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -197,34 +223,54 @@ export default function PromosPage() {
 
       {/* Add Modal */}
       {showAdd && (
-        <AddPromoModal
+        <PromoFormModal
           talents={talents}
           onClose={() => setShowAdd(false)}
-          onCreated={(p) => setPromos((prev) => [...prev, p])}
+          onSaved={(p) => setPromos((prev) => [...prev, p])}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingPromo && (
+        <PromoFormModal
+          talents={talents}
+          promo={editingPromo}
+          onClose={() => setEditingPromo(null)}
+          onSaved={(updated) => {
+            setPromos((prev) => prev.map((p) => (p.code === updated.code ? updated : p)));
+            setEditingPromo(null);
+          }}
         />
       )}
     </div>
   );
 }
 
-// ============ Modal Tambah Promo ============
+// ============ Modal Tambah / Edit Promo ============
 
-function AddPromoModal({
+function PromoFormModal({
   talents,
+  promo,
   onClose,
-  onCreated,
+  onSaved,
 }: {
   talents: Talent[];
+  promo?: Promo;
   onClose: () => void;
-  onCreated: (promo: Promo) => void;
+  onSaved: (promo: Promo) => void;
 }) {
-  const [code, setCode] = useState("");
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
-  const [discountValue, setDiscountValue] = useState("");
-  const [maxUses, setMaxUses] = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [talentMode, setTalentMode] = useState<"all" | "specific">("all");
-  const [selectedTalents, setSelectedTalents] = useState<string[]>([]);
+  const isEdit = !!promo;
+
+  const [code, setCode] = useState(promo?.code || "");
+  const [discountType, setDiscountType] = useState<"percent" | "fixed">(promo?.discount_type || "percent");
+  const [discountValue, setDiscountValue] = useState(promo ? String(promo.discount_value) : "");
+  const [maxUses, setMaxUses] = useState(promo ? String(promo.max_uses) : "");
+  const [createdBy, setCreatedBy] = useState(promo?.created_by || "");
+  const [active, setActive] = useState(promo?.active ?? true);
+  const [talentMode, setTalentMode] = useState<"all" | "specific">(
+    promo && promo.talent_ids && promo.talent_ids.length > 0 ? "specific" : "all"
+  );
+  const [selectedTalents, setSelectedTalents] = useState<string[]>(promo?.talent_ids || []);
   const [talentDropdownOpen, setTalentDropdownOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -259,18 +305,32 @@ function AddPromoModal({
 
     setBusy(true);
     try {
-      const promo = await createPromo({
-        code: trimmedCode,
-        discount_type: discountType,
-        discount_value: val,
-        max_uses: uses,
-        talent_ids: talentMode === "all" ? [] : selectedTalents,
-        created_by: createdBy.trim() || undefined,
-      });
-      onCreated(promo);
-      onClose();
+      let result: Promo;
+      const talentIds = talentMode === "all" ? [] : selectedTalents;
+
+      if (isEdit) {
+        result = await updatePromo(promo.code, {
+          discount_type: discountType,
+          discount_value: val,
+          max_uses: uses,
+          talent_ids: talentIds,
+          active,
+          created_by: createdBy.trim() || undefined,
+        });
+      } else {
+        result = await createPromo({
+          code: trimmedCode,
+          discount_type: discountType,
+          discount_value: val,
+          max_uses: uses,
+          talent_ids: talentIds,
+          created_by: createdBy.trim() || undefined,
+        });
+      }
+      onSaved(result);
+      if (!isEdit) onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat promo");
+      setError(err instanceof Error ? err.message : `Gagal ${isEdit ? "menyimpan" : "membuat"} promo`);
     } finally {
       setBusy(false);
     }
@@ -280,7 +340,7 @@ function AddPromoModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="ui-card w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl shadow-black/50 animate-fade-up">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
-          <h2 className="text-lg font-semibold">Tambah Promo Code</h2>
+          <h2 className="text-lg font-semibold">{isEdit ? "Edit Promo" : "Tambah Promo Code"}</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -303,7 +363,8 @@ function AddPromoModal({
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="PROMO2024"
-              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary uppercase"
+              disabled={isEdit}
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary uppercase disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -352,6 +413,26 @@ function AddPromoModal({
               />
             </div>
           </div>
+
+          {/* Active toggle (only for edit) */}
+          {isEdit && (
+            <div className="flex items-center justify-between py-1">
+              <label className="text-xs text-muted-foreground">Status Aktif</label>
+              <button
+                type="button"
+                onClick={() => setActive(!active)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  active ? "bg-success" : "bg-muted"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                    active ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
           {/* Talent restriction */}
           <div>
@@ -453,7 +534,7 @@ function AddPromoModal({
             disabled={busy}
             className="w-full mt-2 px-4 py-2.5 text-sm rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
           >
-            {busy ? "Menyimpan..." : "Buat Promo"}
+            {busy ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Buat Promo"}
           </button>
         </div>
       </div>

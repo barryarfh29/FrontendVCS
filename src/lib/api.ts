@@ -449,6 +449,23 @@ export async function deletePromo(code: string): Promise<{ ok: boolean }> {
   return fetchAPI(`/api/promos/${encodeURIComponent(code)}`, { method: "DELETE" });
 }
 
+export async function updatePromo(
+  code: string,
+  data: {
+    discount_type?: "percent" | "fixed";
+    discount_value?: number;
+    max_uses?: number;
+    talent_ids?: string[];
+    active?: boolean;
+    created_by?: string;
+  }
+): Promise<Promo> {
+  return fetchAPI(`/api/promos/${encodeURIComponent(code)}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 // Activities (auto backup semua kegiatan bot)
 export async function getActivities(
   limit = 50,
