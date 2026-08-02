@@ -7,6 +7,7 @@ import {
   loginVerify2fa,
   type LoginResult,
 } from "@/lib/api";
+import { useEscClose } from "@/lib/use-esc-close";
 import { X, Phone, KeyRound, Lock, CheckCircle2 } from "lucide-react";
 
 interface TalentLoginProps {
@@ -26,6 +27,7 @@ export function TalentLogin({
   onClose,
   onSuccess,
 }: TalentLoginProps) {
+  useEscClose(onClose);
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");

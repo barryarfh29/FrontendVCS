@@ -12,6 +12,7 @@ import {
   type TalentVideo,
 } from "@/lib/api";
 import { parseDuration, formatDuration } from "@/lib/duration";
+import { useEscClose } from "@/lib/use-esc-close";
 import { X, Trash2, Upload, Film, Check, Scissors, Play, Pencil, Volume2, VolumeX } from "lucide-react";
 
 function formatLength(sec?: number | null): string | null {
@@ -32,6 +33,7 @@ export function TalentVideoManager({
   onUpdated,
   onClose,
 }: TalentVideoManagerProps) {
+  useEscClose(onClose);
   const [videos, setVideos] = useState<TalentVideo[]>(talent.videos || []);
   const [clipEditIndex, setClipEditIndex] = useState<number | null>(null);
   const [clipValue, setClipValue] = useState("");

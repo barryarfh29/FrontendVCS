@@ -13,6 +13,7 @@ import {
   type Talent,
   type TalentPackage,
 } from "@/lib/api";
+import { useEscClose } from "@/lib/use-esc-close";
 import { TalentDescEditor } from "@/components/talent-desc-editor";
 import { TalentVideoManager } from "@/components/talent-video-manager";
 import { TalentLogin } from "@/components/talent-login";
@@ -535,6 +536,7 @@ function AddTalentModal({
   onClose: () => void;
   onCreated: (talent: Talent) => void;
 }) {
+  useEscClose(onClose);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [duration, setDuration] = useState("");
@@ -693,6 +695,7 @@ function PackageEditor({
   onClose: () => void;
   onSaved: (talent: Talent) => void;
 }) {
+  useEscClose(onClose);
   const [rows, setRows] = useState<TalentPackage[]>(
     (talent.packages ?? []).map((p) => ({ ...p }))
   );

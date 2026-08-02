@@ -10,6 +10,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { richBlockExtensions } from "@/lib/rich-blocks";
 import { updateTalent, type Talent } from "@/lib/api";
 import { EditorToolbar } from "./editor-toolbar";
+import { useEscClose } from "@/lib/use-esc-close";
 import { Save, X, AlertCircle, Eye, Code } from "lucide-react";
 
 interface TalentDescEditorProps {
@@ -23,6 +24,7 @@ export function TalentDescEditor({
   onSaved,
   onClose,
 }: TalentDescEditorProps) {
+  useEscClose(onClose);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"editor" | "html" | "preview">(
