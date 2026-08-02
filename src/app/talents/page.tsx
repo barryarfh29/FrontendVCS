@@ -712,7 +712,7 @@ function PackageEditor({
           ? {
               ...row,
               [field]:
-                field === "label"
+                field === "label" || field === "duration"
                   ? value
                   : field === "video_index"
                   ? value === ""
@@ -729,8 +729,9 @@ function PackageEditor({
 
   async function save() {
     for (const p of rows) {
-      if (!p.duration || p.duration <= 0)
-        return setError("Durasi tiap paket harus lebih dari 0 (menit).");
+      const dur = parseDuration(String(p.duration || ""));
+      if (dur === null)
+        return setError("Durasi tiap paket harus valid. Format: 5m3s, 5:03, 303s, atau 5.05 (menit desimal).");
       if (!p.price || p.price <= 0)
         return setError("Harga tiap paket harus lebih dari 0.");
     }
@@ -739,7 +740,7 @@ function PackageEditor({
     try {
       const updated = await updateTalent(talent.id, {
         packages: rows.map((p) => ({
-          duration: Number(p.duration),
+          duration: parseDuration(String(p.duration || ""))!,
           price: Number(p.price),
           label: (p.label || "").trim(),
           video_index:
@@ -765,6 +766,7 @@ function PackageEditor({
             <h2 className="text-lg font-semibold">Paket Durasi — {talent.name}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               Tiap paket punya durasi + harga sendiri. Kosongkan semua = pakai harga/durasi tunggal.
+              Format durasi: <b>5m3s</b>, <b>5:03</b>, atau <b>303s</b>
             </p>
           </div>
           <button
@@ -818,17 +820,15 @@ function PackageEditor({
                   <div className="grid grid-cols-[1fr_1fr_1.4fr] gap-2">
                     <div>
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
                         value={row.duration || ""}
                         onChange={(e) => update(i, "duration", e.target.value)}
-                        placeholder="5.6 = 5m 36s"
+                        placeholder="5m3s / 5:03"
                         className="w-full px-2.5 py-2 text-sm rounded-lg bg-card border border-border focus:outline-none focus:border-primary"
                       />
-                      {row.duration > 0 && (
+                      {row.duration && parseDuration(String(row.duration)) !== null && parseDuration(String(row.duration))! > 0 && (
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          = {formatDuration(Number(row.duration))}
+                          = {formatDuration(parseDuration(String(row.duration))!)}
                         </p>
                       )}
                     </div>
