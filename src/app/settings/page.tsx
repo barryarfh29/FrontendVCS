@@ -20,6 +20,8 @@ import {
   Bot,
   MessageSquare,
   Megaphone,
+  Reply,
+  X,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -62,6 +64,13 @@ export default function SettingsPage() {
   const [fbSaving, setFbSaving] = useState(false);
   const [fbMessage, setFbMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  // Userbot Order
+  const [uoEnabled, setUoEnabled] = useState(false);
+  const [uoTriggers, setUoTriggers] = useState<string[]>([]);
+  const [uoInput, setUoInput] = useState("");
+  const [uoSaving, setUoSaving] = useState(false);
+  const [uoMessage, setUoMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
   async function loadAll() {
     try {
       const data = await getSettings();
@@ -79,6 +88,10 @@ export default function SettingsPage() {
       setFbIntervalMin(fb.interval_min != null ? String(fb.interval_min) : "");
       setFbIntervalMax(fb.interval_max != null ? String(fb.interval_max) : "");
       setFbDeleteAfter(fb.delete_after != null ? String(fb.delete_after) : "");
+      // Userbot Order
+      const uo = (data.userbot_order as { enabled?: boolean; triggers?: string[] }) || {};
+      setUoEnabled(!!uo.enabled);
+      setUoTriggers(Array.isArray(uo.triggers) ? uo.triggers : []);
     } catch (err) {
       console.error("Failed to load settings:", err);
     } finally {
@@ -185,6 +198,44 @@ export default function SettingsPage() {
     } finally {
       setFbSaving(false);
     }
+  }
+
+  async function handleSaveUserbotOrder() {
+    setUoSaving(true);
+    setUoMessage(null);
+    try {
+      await updateSettings({
+        userbot_order: { enabled: uoEnabled, triggers: uoTriggers },
+      });
+      setUoMessage({ type: "ok", text: "✓ Userbot Order settings disimpan!" });
+      setTimeout(() => setUoMessage(null), 3000);
+    } catch (err) {
+      setUoMessage({ type: "err", text: err instanceof Error ? err.message : "Gagal menyimpan" });
+    } finally {
+      setUoSaving(false);
+    }
+  }
+
+  function handleUoInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addUoTriggers(uoInput);
+    }
+  }
+
+  function addUoTriggers(raw: string) {
+    const newTags = raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => s && !uoTriggers.includes(s));
+    if (newTags.length > 0) {
+      setUoTriggers((prev) => [...prev, ...newTags]);
+    }
+    setUoInput("");
+  }
+
+  function removeUoTrigger(tag: string) {
+    setUoTriggers((prev) => prev.filter((t) => t !== tag));
   }
 
   async function handleAddAdmin() {
@@ -507,6 +558,105 @@ export default function SettingsPage() {
             {fbMessage.text}
           </p>
         )}
+      </div>
+
+      {/* Userbot Order (CS Auto-Reply) */}
+      <div className="ui-card p-6">
+        <h2 className="text-lg font-semibold mb-1 flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+            <Reply className="h-4 w-4 text-white" />
+          </span>
+          Userbot Order (CS Auto-Reply)
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Auto-reply menu talent ketika customer chat ke akun CS dengan keyword tertentu.
+        </p>
+
+        {/* Toggle enabled */}
+        <div className="flex items-center justify-between mb-4">
+          <label className="text-sm">Enabled</label>
+          <button
+            type="button"
+            onClick={() => setUoEnabled(!uoEnabled)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${
+              uoEnabled ? "bg-success" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                uoEnabled ? "translate-x-5" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Trigger Keywords */}
+        <div>
+          <label className="text-xs text-muted-foreground">Trigger Keywords</label>
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Keyword yang membuat userbot CS otomatis reply menu talent. Sticker dari customer juga otomatis trigger menu.
+          </p>
+
+          {/* Tags */}
+          {uoTriggers.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {uoTriggers.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-md bg-primary/10 text-primary ring-1 ring-primary/20"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeUoTrigger(tag)}
+                    className="hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <input
+            value={uoInput}
+            onChange={(e) => setUoInput(e.target.value)}
+            onKeyDown={handleUoInputKeyDown}
+            onBlur={() => { if (uoInput.trim()) addUoTriggers(uoInput); }}
+            placeholder="menu, halo, order, harga, price..."
+            className="w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Tekan Enter atau koma untuk menambah keyword.
+          </p>
+        </div>
+
+        <button
+          onClick={handleSaveUserbotOrder}
+          disabled={uoSaving}
+          className="mt-4 flex items-center gap-1.5 px-4 py-2 text-xs rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
+        >
+          <Save className="h-3 w-3" />
+          {uoSaving ? "Saving..." : "Save Userbot Order"}
+        </button>
+        {uoMessage && (
+          <p
+            className={`mt-3 text-sm ${
+              uoMessage.type === "ok" ? "text-success" : "text-destructive"
+            }`}
+          >
+            {uoMessage.text}
+          </p>
+        )}
+
+        <div className="mt-4 p-3 rounded-lg bg-secondary/50 border border-border">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong>Cara kerja:</strong> Saat customer chat ke akun CS dan mengetik salah satu keyword di atas,
+            bot otomatis membalas dengan daftar talent. Customer lalu ketik nama talent → pilih paket → bayar
+            via QR → session dimulai otomatis. Semua tanpa tombol inline keyboard.
+          </p>
+        </div>
       </div>
 
       {/* Admins */}
