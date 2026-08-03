@@ -19,6 +19,7 @@ import {
   Trash2,
   Bot,
   MessageSquare,
+  Megaphone,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -53,6 +54,14 @@ export default function SettingsPage() {
   // CS Username
   const [csUsername, setCsUsername] = useState("");
 
+  // Fake Buyer
+  const [fbEnabled, setFbEnabled] = useState(false);
+  const [fbIntervalMin, setFbIntervalMin] = useState("");
+  const [fbIntervalMax, setFbIntervalMax] = useState("");
+  const [fbDeleteAfter, setFbDeleteAfter] = useState("");
+  const [fbSaving, setFbSaving] = useState(false);
+  const [fbMessage, setFbMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
   async function loadAll() {
     try {
       const data = await getSettings();
@@ -64,6 +73,12 @@ export default function SettingsPage() {
       setLogChannelStart(String(data.log_channel_start || ""));
       setLogChannelPayment(String(data.log_channel_payment || ""));
       setCsUsername(String(data.cs_username || ""));
+      // Fake Buyer
+      const fb = (data.fake_buyer as { enabled?: boolean; interval_min?: number; interval_max?: number; delete_after?: number }) || {};
+      setFbEnabled(!!fb.enabled);
+      setFbIntervalMin(fb.interval_min != null ? String(fb.interval_min) : "");
+      setFbIntervalMax(fb.interval_max != null ? String(fb.interval_max) : "");
+      setFbDeleteAfter(fb.delete_after != null ? String(fb.delete_after) : "");
     } catch (err) {
       console.error("Failed to load settings:", err);
     } finally {
@@ -146,6 +161,29 @@ export default function SettingsPage() {
       });
     } finally {
       setLogSaving(false);
+    }
+  }
+
+  async function handleSaveFakeBuyer() {
+    setFbSaving(true);
+    setFbMessage(null);
+    const min = fbIntervalMin.trim() ? Number(fbIntervalMin) : 0;
+    const max = fbIntervalMax.trim() ? Number(fbIntervalMax) : 0;
+    const del = fbDeleteAfter.trim() ? Number(fbDeleteAfter) : 0;
+    if (isNaN(min) || min < 0) { setFbMessage({ type: "err", text: "Interval min harus angka >= 0" }); setFbSaving(false); return; }
+    if (isNaN(max) || max < 0) { setFbMessage({ type: "err", text: "Interval max harus angka >= 0" }); setFbSaving(false); return; }
+    if (max > 0 && max < min) { setFbMessage({ type: "err", text: "Interval max harus >= interval min" }); setFbSaving(false); return; }
+    if (isNaN(del) || del < 0) { setFbMessage({ type: "err", text: "Delete after harus angka >= 0" }); setFbSaving(false); return; }
+    try {
+      await updateSettings({
+        fake_buyer: { enabled: fbEnabled, interval_min: min, interval_max: max, delete_after: del },
+      });
+      setFbMessage({ type: "ok", text: "✓ Fake Buyer settings disimpan!" });
+      setTimeout(() => setFbMessage(null), 3000);
+    } catch (err) {
+      setFbMessage({ type: "err", text: err instanceof Error ? err.message : "Gagal menyimpan" });
+    } finally {
+      setFbSaving(false);
     }
   }
 
@@ -367,6 +405,106 @@ export default function SettingsPage() {
             }`}
           >
             {logMessage.text}
+          </p>
+        )}
+      </div>
+
+      {/* Fake Buyer (Social Proof) */}
+      <div className="ui-card p-6">
+        <h2 className="text-lg font-semibold mb-1 flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
+            <Megaphone className="h-4 w-4 text-white" />
+          </span>
+          Fake Buyer (Social Proof)
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Kirim notifikasi pembelian palsu secara otomatis untuk social proof di channel.
+        </p>
+
+        {/* Toggle enabled */}
+        <div className="flex items-center justify-between mb-4">
+          <label className="text-sm">Enabled</label>
+          <button
+            type="button"
+            onClick={() => setFbEnabled(!fbEnabled)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${
+              fbEnabled ? "bg-success" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                fbEnabled ? "translate-x-5" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground">
+              Interval Min (menit)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={fbIntervalMin}
+              onChange={(e) => setFbIntervalMin(e.target.value)}
+              placeholder="5"
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Minimum jeda antar notifikasi
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">
+              Interval Max (menit)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={fbIntervalMax}
+              onChange={(e) => setFbIntervalMax(e.target.value)}
+              placeholder="15"
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Maximum jeda antar notifikasi
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">
+              Delete After (menit)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={fbDeleteAfter}
+              onChange={(e) => setFbDeleteAfter(e.target.value)}
+              placeholder="0"
+              className="mt-1 w-full px-3 py-2 text-sm rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Auto-hapus pesan setelah X menit (0 = tidak hapus)
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSaveFakeBuyer}
+          disabled={fbSaving}
+          className="mt-4 flex items-center gap-1.5 px-4 py-2 text-xs rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
+        >
+          <Save className="h-3 w-3" />
+          {fbSaving ? "Saving..." : "Save Fake Buyer"}
+        </button>
+        {fbMessage && (
+          <p
+            className={`mt-3 text-sm ${
+              fbMessage.type === "ok" ? "text-success" : "text-destructive"
+            }`}
+          >
+            {fbMessage.text}
           </p>
         )}
       </div>
