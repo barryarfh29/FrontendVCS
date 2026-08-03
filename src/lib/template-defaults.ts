@@ -146,61 +146,102 @@ export const TEMPLATE_PRESETS: Record<
 
 export const TEMPLATE_META: Record<
   string,
-  { label: string; description: string; variables: string[] }
+  { label: string; description: string; variables: string[]; category: string }
 > = {
   welcome: {
-    label: "Welcome",
+    label: "Halaman Pilih Talent",
     description: "Halaman pilih talent",
     variables: [],
-  },
-  payment: {
-    label: "Payment",
-    description: "Invoice QRIS",
-    variables: ["{invoice_id}", "{talent_name}", "{duration}", "{nominal}"],
-  },
-  paid: {
-    label: "Paid",
-    description: "Pembayaran diterima",
-    variables: [],
-  },
-  connecting: {
-    label: "Connecting",
-    description: "Menghubungi talent",
-    variables: ["{talent_name}"],
-  },
-  session_ready: {
-    label: "Session Ready",
-    description: "Sesi siap",
-    variables: ["{talent_name}", "{duration}"],
-  },
-  session_end: {
-    label: "Session End",
-    description: "Sesi berakhir",
-    variables: [],
-  },
-  talent_full: {
-    label: "Talent Full",
-    description: "Talent full",
-    variables: ["{talent_name}"],
+    category: "customer",
   },
   talent_detail: {
-    label: "Talent Detail",
+    label: "Detail Talent",
     description: "Detail talent ({desc} diisi dari admin bot)",
     variables: ["{talent_name}", "{desc}", "{price}", "{duration}"],
+    category: "customer",
+  },
+  talent_full: {
+    label: "Talent Full/Busy",
+    description: "Talent full",
+    variables: ["{talent_name}"],
+    category: "customer",
+  },
+  payment: {
+    label: "Invoice QRIS",
+    description: "Invoice QRIS",
+    variables: ["{invoice_id}", "{talent_name}", "{duration}", "{nominal}"],
+    category: "pembayaran",
+  },
+  paid: {
+    label: "Pembayaran Diterima",
+    description: "Pembayaran diterima",
+    variables: [],
+    category: "pembayaran",
+  },
+  connecting: {
+    label: "Menghubungi Talent",
+    description: "Menghubungi talent",
+    variables: ["{talent_name}"],
+    category: "pembayaran",
+  },
+  session_ready: {
+    label: "Sesi Siap",
+    description: "Sesi siap",
+    variables: ["{talent_name}", "{duration}"],
+    category: "session",
+  },
+  session_end: {
+    label: "Sesi Berakhir",
+    description: "Sesi berakhir",
+    variables: [],
+    category: "session",
+  },
+  channel_greeting: {
+    label: "Sapaan Channel Private",
+    description: "Pesan sapaan di channel private session",
+    variables: ["{talent_name}", "{duration}"],
+    category: "session",
+  },
+  join_warning: {
+    label: "Peringatan Belum Join VC",
+    description: "Reminder jika customer belum join voice chat",
+    variables: ["{remaining}"],
+    category: "session",
   },
   loading_1: {
     label: "Loading Step 1",
     description: "Pesan awal saat user /start",
     variables: [],
+    category: "loading",
   },
   loading_2: {
     label: "Loading Step 2",
     description: "Setelah cek talent tersedia",
     variables: ["{count}"],
+    category: "loading",
   },
   loading_3: {
     label: "Loading Step 3",
     description: "Sebelum menu muncul",
     variables: ["{count}"],
+    category: "loading",
+  },
+  promo_prompt: {
+    label: "Prompt Promo Code",
+    description: "Pesan muncul saat customer diminta input promo code",
+    variables: [],
+    category: "promo",
+  },
+  promo_applied: {
+    label: "Konfirmasi Promo",
+    description: "Pesan konfirmasi promo berhasil",
+    variables: ["{code}", "{discount}"],
+    category: "promo",
+  },
+  fake_buyer: {
+    label: "Notifikasi Fake Buyer",
+    description: "Template pesan notifikasi social proof",
+    variables: ["{username}"],
+    category: "promo",
   },
 };
