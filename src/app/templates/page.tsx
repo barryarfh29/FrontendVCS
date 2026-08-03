@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { getTemplates, getSettings, updateSettings, type Template } from "@/lib/api";
 import { TEMPLATE_META } from "@/lib/template-defaults";
 import { TemplateEditor } from "@/components/template-editor";
 import {
   FileText,
-  ChevronDown,
   ChevronRight,
   Search,
   RefreshCw,
@@ -18,21 +17,41 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Category definitions
-const CATEGORIES = [
-  { id: "all", label: "Semua", color: "bg-white/10 text-foreground ring-border" },
-  { id: "customer", label: "Customer Flow", color: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30" },
-  { id: "pembayaran", label: "Pembayaran", color: "bg-orange-500/15 text-orange-400 ring-orange-500/30" },
-  { id: "session", label: "Session", color: "bg-violet-500/15 text-violet-400 ring-violet-500/30" },
-  { id: "loading", label: "Loading", color: "bg-blue-500/15 text-blue-400 ring-blue-500/30" },
-  { id: "promo", label: "Promo & Social", color: "bg-yellow-500/15 text-yellow-400 ring-yellow-500/30" },
-  { id: "trigger", label: "Trigger Menu", color: "bg-red-500/15 text-red-400 ring-red-500/30" },
+// Main tabs
+const MAIN_TABS = [
+  { id: "bot", label: "Bot" },
+  { id: "userbot", label: "Userbot" },
+  { id: "all", label: "Semua" },
 ] as const;
 
-// All available variables
-const ALL_VARIABLES = [
+// Sub-categories per tab
+const BOT_CATEGORIES = [
+  { id: "bot_customer", label: "Customer Flow", color: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30" },
+  { id: "bot_loading", label: "Loading", color: "bg-blue-500/15 text-blue-400 ring-blue-500/30" },
+  { id: "bot_payment", label: "Pembayaran", color: "bg-orange-500/15 text-orange-400 ring-orange-500/30" },
+  { id: "bot_session", label: "Session", color: "bg-violet-500/15 text-violet-400 ring-violet-500/30" },
+  { id: "bot_promo", label: "Promo & Social", color: "bg-yellow-500/15 text-yellow-400 ring-yellow-500/30" },
+];
+
+const USERBOT_CATEGORIES = [
+  { id: "userbot_order", label: "Order Flow", color: "bg-red-500/15 text-red-400 ring-red-500/30" },
+];
+
+const ALL_CATEGORIES = [...BOT_CATEGORIES, ...USERBOT_CATEGORIES];
+
+// Category color map for badges in cards
+const CATEGORY_MAP: Record<string, { label: string; color: string }> = {};
+ALL_CATEGORIES.forEach((c) => { CATEGORY_MAP[c.id] = { label: c.label, color: c.color }; });
+
+// Variables per tab
+const BOT_VARIABLES = [
   "{talent_name}", "{price}", "{duration}", "{invoice_id}", "{nominal}",
   "{code}", "{discount}", "{username}", "{count}", "{remaining}", "{desc}",
+];
+
+const USERBOT_VARIABLES = [
+  "{talent_name}", "{talent_list}", "{package_list}", "{package_count}",
+  "{price}", "{duration}", "{nominal}", "{status}",
 ];
 
 const DEFAULT_TRIGGERS = [
@@ -44,7 +63,8 @@ const DEFAULT_TRIGGERS = [
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [mainTab, setMainTab] = useState<"bot" | "userbot" | "all">("bot");
+  const [subFilter, setSubFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [copiedVar, setCopiedVar] = useState<string | null>(null);
@@ -81,12 +101,15 @@ export default function TemplatesPage() {
     setTimeout(() => setCopiedVar(null), 1500);
   }
 
-  function getCategoryForKey(key: string): string {
-    return TEMPLATE_META[key]?.category || "customer";
+  function getTemplateCategory(t: Template): string {
+    // Use API category if available, fallback to TEMPLATE_META
+    const apiCat = (t as Record<string, unknown>).category as string | undefined;
+    if (apiCat) return apiCat;
+    return TEMPLATE_META[t.key]?.category || "bot_customer";
   }
 
   function getCategoryBadge(catId: string) {
-    const cat = CATEGORIES.find((c) => c.id === catId);
+    const cat = CATEGORY_MAP[catId];
     if (!cat) return null;
     return (
       <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ring-1 ${cat.color}`}>
@@ -95,13 +118,21 @@ export default function TemplatesPage() {
     );
   }
 
-  // Filter templates
+  // Filter logic
   const filteredTemplates = templates.filter((t) => {
-    const meta = TEMPLATE_META[t.key];
-    const cat = getCategoryForKey(t.key);
-    if (activeCategory !== "all" && cat !== activeCategory) return false;
+    const cat = getTemplateCategory(t);
+
+    // Main tab filter
+    if (mainTab === "bot" && !cat.startsWith("bot_")) return false;
+    if (mainTab === "userbot" && !cat.startsWith("userbot_")) return false;
+
+    // Sub-filter
+    if (subFilter && cat !== subFilter) return false;
+
+    // Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
+      const meta = TEMPLATE_META[t.key];
       const label = (meta?.label || t.key).toLowerCase();
       const desc = (meta?.description || "").toLowerCase();
       const content = (t.content || "").toLowerCase();
@@ -109,6 +140,28 @@ export default function TemplatesPage() {
     }
     return true;
   });
+
+  // Active sub-categories based on tab
+  const activeSubCategories = mainTab === "bot" ? BOT_CATEGORIES
+    : mainTab === "userbot" ? USERBOT_CATEGORIES
+    : ALL_CATEGORIES;
+
+  // Active variables based on tab
+  const activeVariables = mainTab === "userbot" ? USERBOT_VARIABLES
+    : mainTab === "bot" ? BOT_VARIABLES
+    : [...new Set([...BOT_VARIABLES, ...USERBOT_VARIABLES])];
+
+  // Counter label
+  function getCounterLabel() {
+    let label = `${filteredTemplates.length}/${templates.length} tampil`;
+    if (subFilter) {
+      const cat = CATEGORY_MAP[subFilter];
+      if (cat) label += ` — ${mainTab === "all" ? "" : (mainTab === "bot" ? "Bot " : "Userbot ")}${cat.label}`;
+    } else if (mainTab !== "all") {
+      label += ` — ${mainTab === "bot" ? "Bot" : "Userbot"}`;
+    }
+    return label;
+  }
 
   // Trigger helpers
   function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -157,7 +210,7 @@ export default function TemplatesPage() {
     );
   }
 
-  const showTriggerCard = activeCategory === "all" || activeCategory === "trigger";
+  const showTriggerCard = mainTab === "userbot" || mainTab === "all";
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -182,9 +235,11 @@ export default function TemplatesPage() {
 
       {/* Variables bar */}
       <div className="ui-card p-4">
-        <p className="text-xs text-muted-foreground mb-2 font-medium">Variabel tersedia (klik untuk copy):</p>
+        <p className="text-xs text-muted-foreground mb-2 font-medium">
+          Variabel {mainTab === "bot" ? "Bot" : mainTab === "userbot" ? "Userbot" : ""} (klik untuk copy):
+        </p>
         <div className="flex flex-wrap gap-1.5">
-          {ALL_VARIABLES.map((v) => (
+          {activeVariables.map((v) => (
             <button
               key={v}
               onClick={() => copyVariable(v)}
@@ -197,16 +252,64 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* Category filters + Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      {/* Main tabs */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          {MAIN_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => { setMainTab(tab.id); setSubFilter(null); }}
+              className={cn(
+                "px-4 py-2 text-sm rounded-xl font-medium transition-all",
+                mainTab === tab.id
+                  ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25"
+                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+
+          {/* Search */}
+          <div className="relative ml-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari template..."
+              className="pl-9 pr-3 py-2 text-xs rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary w-56"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Sub-category filters */}
         <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((cat) => (
+          <button
+            onClick={() => setSubFilter(null)}
+            className={cn(
+              "px-3 py-1.5 text-xs rounded-lg ring-1 transition-all font-medium",
+              subFilter === null
+                ? "bg-white/10 text-foreground ring-primary/40 shadow-sm"
+                : "bg-secondary/50 text-muted-foreground ring-border hover:ring-primary/30 hover:text-foreground"
+            )}
+          >
+            Semua
+          </button>
+          {activeSubCategories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => setSubFilter(subFilter === cat.id ? null : cat.id)}
               className={cn(
                 "px-3 py-1.5 text-xs rounded-lg ring-1 transition-all font-medium",
-                activeCategory === cat.id
+                subFilter === cat.id
                   ? cat.color + " shadow-sm"
                   : "bg-secondary/50 text-muted-foreground ring-border hover:ring-primary/30 hover:text-foreground"
               )}
@@ -215,42 +318,19 @@ export default function TemplatesPage() {
             </button>
           ))}
         </div>
-        <div className="relative ml-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari template..."
-            className="pl-9 pr-3 py-2 text-xs rounded-lg bg-secondary border border-border focus:outline-none focus:border-primary w-56"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Counter */}
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span>
-          {filteredTemplates.length}/{templates.length} tampil
-          {activeCategory !== "all" && ` — ${CATEGORIES.find((c) => c.id === activeCategory)?.label}`}
-        </span>
+        <span>{getCounterLabel()}</span>
         {expandedKey && (
-          <button
-            onClick={() => setExpandedKey(null)}
-            className="text-primary hover:underline"
-          >
+          <button onClick={() => setExpandedKey(null)} className="text-primary hover:underline">
             Tutup Semua
           </button>
         )}
-        {activeCategory !== "all" && (
+        {(subFilter || searchQuery) && (
           <button
-            onClick={() => { setActiveCategory("all"); setSearchQuery(""); }}
+            onClick={() => { setSubFilter(null); setSearchQuery(""); }}
             className="text-primary hover:underline"
           >
             Reset Filter
@@ -271,7 +351,6 @@ export default function TemplatesPage() {
                 Daftar kata yang membuat userbot CS langsung membalas dengan template Menu. Sticker dari customer juga otomatis trigger menu.
               </p>
             </div>
-            {getCategoryBadge("trigger")}
           </div>
 
           {/* Tags */}
@@ -338,7 +417,7 @@ export default function TemplatesPage() {
         <div className="space-y-3">
           {filteredTemplates.map((template) => {
             const meta = TEMPLATE_META[template.key];
-            const cat = getCategoryForKey(template.key);
+            const cat = getTemplateCategory(template);
             const isExpanded = expandedKey === template.key;
 
             return (
@@ -362,7 +441,7 @@ export default function TemplatesPage() {
                       {getCategoryBadge(cat)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {meta?.description || template.key}
+                      {meta?.description || template.description || template.key}
                     </p>
                   </div>
                   <code className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded hidden sm:block">

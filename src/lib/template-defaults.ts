@@ -148,100 +148,154 @@ export const TEMPLATE_META: Record<
   string,
   { label: string; description: string; variables: string[]; category: string }
 > = {
+  // Bot - Customer Flow
   welcome: {
     label: "Halaman Pilih Talent",
     description: "Halaman pilih talent",
     variables: [],
-    category: "customer",
+    category: "bot_customer",
   },
   talent_detail: {
     label: "Detail Talent",
     description: "Detail talent ({desc} diisi dari admin bot)",
     variables: ["{talent_name}", "{desc}", "{price}", "{duration}"],
-    category: "customer",
+    category: "bot_customer",
   },
   talent_full: {
     label: "Talent Full/Busy",
     description: "Talent full",
     variables: ["{talent_name}"],
-    category: "customer",
+    category: "bot_customer",
   },
+  // Bot - Pembayaran
   payment: {
     label: "Invoice QRIS",
     description: "Invoice QRIS",
     variables: ["{invoice_id}", "{talent_name}", "{duration}", "{nominal}"],
-    category: "pembayaran",
+    category: "bot_payment",
   },
   paid: {
     label: "Pembayaran Diterima",
     description: "Pembayaran diterima",
     variables: [],
-    category: "pembayaran",
+    category: "bot_payment",
   },
   connecting: {
     label: "Menghubungi Talent",
     description: "Menghubungi talent",
     variables: ["{talent_name}"],
-    category: "pembayaran",
+    category: "bot_payment",
   },
+  // Bot - Session
   session_ready: {
     label: "Sesi Siap",
     description: "Sesi siap",
     variables: ["{talent_name}", "{duration}"],
-    category: "session",
+    category: "bot_session",
   },
   session_end: {
     label: "Sesi Berakhir",
     description: "Sesi berakhir",
     variables: [],
-    category: "session",
+    category: "bot_session",
   },
   channel_greeting: {
     label: "Sapaan Channel Private",
     description: "Pesan sapaan di channel private session",
     variables: ["{talent_name}", "{duration}"],
-    category: "session",
+    category: "bot_session",
   },
   join_warning: {
     label: "Peringatan Belum Join VC",
     description: "Reminder jika customer belum join voice chat",
     variables: ["{remaining}"],
-    category: "session",
+    category: "bot_session",
   },
+  // Bot - Loading
   loading_1: {
     label: "Loading Step 1",
     description: "Pesan awal saat user /start",
     variables: [],
-    category: "loading",
+    category: "bot_loading",
   },
   loading_2: {
     label: "Loading Step 2",
     description: "Setelah cek talent tersedia",
     variables: ["{count}"],
-    category: "loading",
+    category: "bot_loading",
   },
   loading_3: {
     label: "Loading Step 3",
     description: "Sebelum menu muncul",
     variables: ["{count}"],
-    category: "loading",
+    category: "bot_loading",
   },
+  // Bot - Promo & Social
   promo_prompt: {
     label: "Prompt Promo Code",
     description: "Pesan muncul saat customer diminta input promo code",
     variables: [],
-    category: "promo",
+    category: "bot_promo",
   },
   promo_applied: {
     label: "Konfirmasi Promo",
     description: "Pesan konfirmasi promo berhasil",
     variables: ["{code}", "{discount}"],
-    category: "promo",
+    category: "bot_promo",
   },
   fake_buyer: {
     label: "Notifikasi Fake Buyer",
     description: "Template pesan notifikasi social proof",
     variables: ["{username}"],
-    category: "promo",
+    category: "bot_promo",
+  },
+  // Userbot - Order Flow
+  ub_menu: {
+    label: "Menu Talent",
+    description: "Daftar talent yang tersedia di userbot CS",
+    variables: ["{talent_list}"],
+    category: "userbot_order",
+  },
+  ub_package: {
+    label: "Pilih Paket",
+    description: "List paket durasi setelah customer pilih talent",
+    variables: ["{talent_name}", "{package_list}", "{package_count}"],
+    category: "userbot_order",
+  },
+  ub_confirm: {
+    label: "Konfirmasi Order",
+    description: "Konfirmasi sebelum pembayaran",
+    variables: ["{talent_name}", "{price}", "{duration}"],
+    category: "userbot_order",
+  },
+  ub_invoice: {
+    label: "Invoice Pembayaran",
+    description: "Invoice QRIS di userbot",
+    variables: ["{talent_name}", "{nominal}", "{duration}"],
+    category: "userbot_order",
+  },
+  ub_paid: {
+    label: "Pembayaran Berhasil",
+    description: "Konfirmasi pembayaran berhasil di userbot",
+    variables: ["{talent_name}", "{duration}"],
+    category: "userbot_order",
+  },
+  ub_cancelled: {
+    label: "Order Dibatalkan",
+    description: "Pesan saat order dibatalkan",
+    variables: ["{talent_name}"],
+    category: "userbot_order",
+  },
+  ub_unavailable: {
+    label: "Talent Tidak Tersedia",
+    description: "Pesan saat talent tidak online/available",
+    variables: ["{talent_name}", "{status}"],
+    category: "userbot_order",
+  },
+  ub_expired: {
+    label: "Invoice Expired",
+    description: "Pesan saat invoice expired belum dibayar",
+    variables: ["{talent_name}", "{nominal}"],
+    category: "userbot_order",
   },
 };
