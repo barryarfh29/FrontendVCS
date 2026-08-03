@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Table } from "@tiptap/extension-table";
@@ -15,6 +15,7 @@ import {
   TEMPLATE_PRESETS,
 } from "@/lib/template-defaults";
 import { EditorToolbar } from "./editor-toolbar";
+import { FormatToolbar } from "./format-toolbar";
 import { Save, RotateCcw, Eye, Code, AlertCircle, Sparkles } from "lucide-react";
 
 interface TemplateEditorProps {
@@ -22,17 +23,37 @@ interface TemplateEditorProps {
   onSaved: (updated: Template) => void;
 }
 
+function getEditorMode(template: Template): "html" | "markdown" {
+  const cat = template.category || TEMPLATE_META[template.key]?.category || "";
+  if (cat.startsWith("userbot_")) return "markdown";
+  return "html";
+}
+
 export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
+  const formatMode = getEditorMode(template);
+  const isUserbot = formatMode === "markdown";
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [viewMode, setViewMode] = useState<"editor" | "html" | "preview">(
-    "editor"
+    isUserbot ? "html" : "editor"
   );
   const [htmlSource, setHtmlSource] = useState(template.content || "");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [cursorPos, setCursorPos] = useState<number | null>(null);
 
   const meta = TEMPLATE_META[template.key];
   const presets = TEMPLATE_PRESETS[template.key] || [];
+
+  // For userbot mode, restore cursor after insert
+  useEffect(() => {
+    if (cursorPos !== null && textareaRef.current) {
+      textareaRef.current.selectionStart = cursorPos;
+      textareaRef.current.selectionEnd = cursorPos;
+      setCursorPos(null);
+    }
+  }, [cursorPos, htmlSource]);
 
   const editor = useEditor({
     extensions: [
@@ -59,7 +80,7 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
   });
 
   const handleSave = useCallback(async () => {
-    const content = viewMode === "html" ? htmlSource : editor?.getHTML() || "";
+    const content = viewMode === "html" || isUserbot ? htmlSource : editor?.getHTML() || "";
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -74,26 +95,110 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
     } finally {
       setSaving(false);
     }
-  }, [editor, htmlSource, viewMode, template, onSaved]);
+  }, [editor, htmlSource, viewMode, isUserbot, template, onSaved]);
 
   const handleReset = useCallback(() => {
     const defaultContent = TEMPLATE_DEFAULTS[template.key] || "";
-    editor?.commands.setContent(defaultContent);
+    if (!isUserbot) {
+      editor?.commands.setContent(defaultContent);
+    }
     setHtmlSource(defaultContent);
     setError(null);
     setSuccess(false);
-  }, [editor, template.key]);
+  }, [editor, template.key, isUserbot]);
 
   const applyPreset = useCallback(
     (html: string) => {
-      editor?.commands.setContent(html);
+      if (!isUserbot) {
+        editor?.commands.setContent(html);
+      }
       setHtmlSource(html);
       setError(null);
       setSuccess(false);
     },
-    [editor]
+    [editor, isUserbot]
   );
 
+  function handleToolbarInsert(newText: string, newCursorPos?: number) {
+    setHtmlSource(newText);
+    if (!isUserbot && editor) {
+      editor.commands.setContent(newText);
+    }
+    if (newCursorPos !== undefined) {
+      setCursorPos(newCursorPos);
+    }
+  }
+
+  // Userbot templates: only show textarea with markdown toolbar
+  if (isUserbot) {
+    return (
+      <div className="flex flex-col bg-card">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {meta?.label || template.key}
+            </h2>
+            {meta?.variables.length ? (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Variables: {meta.variables.join(", ")}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <Save className="h-3 w-3" />
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+
+        {/* Status */}
+        {(error || success) && (
+          <div className={`px-5 py-2 text-sm ${error ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+            {error ? (
+              <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4" /> {error}</span>
+            ) : "✓ Template berhasil disimpan!"}
+          </div>
+        )}
+
+        {/* Format Toolbar */}
+        <FormatToolbar
+          mode="markdown"
+          templateKey={template.key}
+          textareaRef={textareaRef}
+          onInsert={handleToolbarInsert}
+        />
+
+        {/* Textarea */}
+        <textarea
+          ref={textareaRef}
+          value={htmlSource}
+          onChange={(e) => {
+            setHtmlSource(e.target.value);
+            setSuccess(false);
+            setError(null);
+          }}
+          className="w-full min-h-[300px] p-4 bg-transparent text-sm font-mono text-foreground resize-none focus:outline-none"
+          spellCheck={false}
+          placeholder="Ketik template di sini..."
+        />
+      </div>
+    );
+  }
+
+  // Bot templates: TipTap editor with HTML toolbar in source view
   return (
     <div className="h-full flex flex-col bg-card rounded-xl border border-border overflow-hidden">
       {/* Header */}
@@ -214,15 +319,24 @@ export function TemplateEditor({ template, onSaved }: TemplateEditorProps) {
         )}
 
         {viewMode === "html" && (
-          <textarea
-            value={htmlSource}
-            onChange={(e) => {
-              setHtmlSource(e.target.value);
-              editor?.commands.setContent(e.target.value);
-            }}
-            className="w-full h-full min-h-[300px] p-4 bg-transparent text-sm font-mono text-foreground resize-none focus:outline-none"
-            spellCheck={false}
-          />
+          <div>
+            <FormatToolbar
+              mode="html"
+              templateKey={template.key}
+              textareaRef={textareaRef}
+              onInsert={handleToolbarInsert}
+            />
+            <textarea
+              ref={textareaRef}
+              value={htmlSource}
+              onChange={(e) => {
+                setHtmlSource(e.target.value);
+                editor?.commands.setContent(e.target.value);
+              }}
+              className="w-full h-full min-h-[300px] p-4 bg-transparent text-sm font-mono text-foreground resize-none focus:outline-none"
+              spellCheck={false}
+            />
+          </div>
         )}
 
         {viewMode === "preview" && (
