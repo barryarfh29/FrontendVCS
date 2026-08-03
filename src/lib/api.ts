@@ -123,6 +123,7 @@ export interface Template {
   key: string;
   content: string;
   description?: string;
+  category?: string;
 }
 
 export interface TalentVideo {

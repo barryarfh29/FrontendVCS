@@ -103,8 +103,7 @@ export default function TemplatesPage() {
 
   function getTemplateCategory(t: Template): string {
     // Use API category if available, fallback to TEMPLATE_META
-    const apiCat = (t as Record<string, unknown>).category as string | undefined;
-    if (apiCat) return apiCat;
+    if (t.category) return t.category;
     return TEMPLATE_META[t.key]?.category || "bot_customer";
   }
 
